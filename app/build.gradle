@@ -7,7 +7,7 @@ apply plugin: 'kotlin-android-extensions'
 android {
     compileSdkVersion 28
     defaultConfig {
-        applicationId "com.ngallazzi.myapplication"
+        applicationId "com.ngallazzi.flickrphotostreamer"
         minSdkVersion 19
         targetSdkVersion 28
         versionCode 1
@@ -21,7 +21,7 @@ android {
         }
     }
     buildTypes.each {
-        it.buildConfigField 'String', 'FLICKR_API_ENDPOINT', "\"https://api.flickr.com/services/rest/?method=flickr.photos.search\""
+        it.buildConfigField 'String', 'FLICKR_API_ENDPOINT', "\"https://api.flickr.com/services/rest/\""
     }
 }
 
@@ -31,7 +31,12 @@ dependencies {
     implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
     implementation 'com.android.support:recyclerview-v7:28.0.0'
+    // Retrofit for github api calls
     implementation 'com.squareup.retrofit2:retrofit:2.4.0'
+    // Logging calls in the logcat
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.9.1'
+    /// Moshi converter, more performant than gson
+    implementation "com.squareup.retrofit2:converter-moshi:2.0.0"
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
