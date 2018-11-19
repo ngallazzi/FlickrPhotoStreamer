@@ -1,15 +1,40 @@
 package com.ngallazzi.flickrphotostreamer
 
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
+import android.view.View
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
+import com.ngallazzi.flickrphotostreamer.activities.MainActivityViewModel
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var mActivityViewModel: MainActivityViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        mActivityViewModel = ViewModelProviders.of(this).get(MainActivityViewModel::class.java)
+
+        // Create the observer which updates the UI.
+        mActivityViewModel.searchPhotosResponse.observe(this, Observer { response ->
+            Log.v(TAG, response.toString())
+        })
+
+        mActivityViewModel.showError.observe(this, Observer {
+            Toast.makeText(
+                this@MainActivity,
+                getString(R.string.api_error, it), Toast.LENGTH_SHORT
+            ).show()
+        })
+
+        // call api
+        mActivityViewModel.loadPhotos(45.52, 9.19)
     }
 
-    // photo url https://farm5.staticflickr.com/4850/32085224808_33404b5832.jpg
-    // get api url https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=665cfc184da3b8b0809c97cbb0475aee&lat=45.4854739&lon=9.2022176&format=json&nojsoncallback=1
+    companion object {
+        const val TAG = "MainActivity"
+    }
+
 }
