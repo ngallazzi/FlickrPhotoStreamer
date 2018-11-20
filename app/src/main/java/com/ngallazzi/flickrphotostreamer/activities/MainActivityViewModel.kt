@@ -14,7 +14,7 @@ import retrofit2.Response
  * Created by Nicola on 2017-03-02.
  */
 
-class MainActivityViewModel() : ViewModel() {
+class MainActivityViewModel : ViewModel() {
 
     var searchPhotosResponse: MutableLiveData<SearchPhotosResponse> = MutableLiveData()
     var showError: MutableLiveData<String> = MutableLiveData()
@@ -26,7 +26,6 @@ class MainActivityViewModel() : ViewModel() {
         call.enqueue(object : Callback<SearchPhotosResponse> {
             override fun onResponse(call: Call<SearchPhotosResponse>, response: Response<SearchPhotosResponse>) {
                 if (response.isSuccessful) {
-                    val headers = response.headers()
                     searchPhotosResponse.value = SearchPhotosResponse(response.body()!!.photos)
                 } else {
                     showError.value = response.errorBody()!!.string()
