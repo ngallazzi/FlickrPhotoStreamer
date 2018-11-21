@@ -83,7 +83,7 @@ class MainActivity : AppCompatActivity() {
         photosLiveData = mActivityViewModel.getSearchPhotos()
         photosLiveData.observe(this@MainActivity, Observer {
             for (item in it.response.photos) {
-                photos.add(item)
+                photos.add(0, item)
             }
             rvAdapter.notifyDataSetChanged()
         })
@@ -143,18 +143,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-
-        if (requestCode == LOCATION_PERMISSIONS_REQUEST_CODE) {
-            when (resultCode) {
-                Activity.RESULT_OK -> {
-                    startItem.isEnabled = true
-                }
-                Activity.RESULT_CANCELED -> {
-                    Toast.makeText(this, getString(R.string.location_settings_unsatisfied_mesage), Toast.LENGTH_SHORT)
-                        .show()
-                }
-            }
-        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -194,6 +182,22 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == LOCATION_PERMISSIONS_REQUEST_CODE) {
+            when (grantResults[0]) {
+                PackageManager.PERMISSION_GRANTED -> {
+                    startItem.isEnabled = true
+                }
+                else -> {
+                    Toast.makeText(this, getString(R.string.location_settings_unsatisfied_mesage), Toast.LENGTH_SHORT)
+                        .show()
+                }
+            }
+        }
+
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         // Handle item selection
         return when (item.itemId) {
@@ -207,6 +211,11 @@ class MainActivity : AppCompatActivity() {
                 stopLocationUpdates()
                 startItem.isVisible = true
                 stopItem.isVisible = false
+                true
+            }
+            R.id.clear -> {
+                photos.clear()
+                rvAdapter.notifyDataSetChanged()
                 true
             }
             else -> super.onOptionsItemSelected(item)
