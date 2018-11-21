@@ -1,10 +1,15 @@
 package com.ngallazzi.flickrphotostreamer
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.util.Log
+import androidx.core.content.ContextCompat
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.ResolvableApiException
-import com.google.android.gms.location.*
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.LocationSettingsRequest
+import com.google.android.gms.location.LocationSettingsStatusCodes
 
 /**
  * FlickrPhotoStreamer
@@ -49,6 +54,13 @@ class LocationSettingsHelper {
                     }
                 }
             }
+        }
+
+        fun locationPermissionsAllowed(context: Context): Boolean {
+            return ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
         }
 
         interface LocationSettingsStatusListener {

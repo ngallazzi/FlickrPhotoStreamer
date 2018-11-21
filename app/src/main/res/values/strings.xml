@@ -3,4 +3,6 @@
     <string name="start">Start</string>
     <string name="stop">Stop</string>
     <string name="api_error">An error occurred: %1$s</string>
+    <string name="location_settings_unsatisfied_mesage">You need update your location settings to use this app</string>
+    <string name="location_settings_ok_message">Location settings ok</string>
 </resources>

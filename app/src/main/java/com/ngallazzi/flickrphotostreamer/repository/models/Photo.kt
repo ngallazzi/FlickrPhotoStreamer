@@ -9,4 +9,8 @@ data class Photo(
     @Json(name = "server") val server: String?,
     @Json(name = "farm") val farm: String?,
     @Json(name = "title") val title: String?
-)
+) {
+    fun getUrl(): String {
+        return "https://farm" + farm + ".staticflickr.com/" + server + "/" + id + "_" + secret + ".jpg"
+    }
+}
