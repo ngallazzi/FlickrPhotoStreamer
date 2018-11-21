@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 apply plugin: 'kotlin-android'
-
+// Kotlin extensions for seamless view binding
 apply plugin: 'kotlin-android-extensions'
 
 android {
