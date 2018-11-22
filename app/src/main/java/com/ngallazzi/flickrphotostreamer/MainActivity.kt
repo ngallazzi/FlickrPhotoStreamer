@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.os.PersistableBundle
 import android.provider.Settings
 import android.view.Menu
 import android.view.MenuInflater
@@ -26,7 +27,6 @@ import com.ngallazzi.flickrphotostreamer.repository.models.Photo
 import com.ngallazzi.flickrphotostreamer.repository.models.SearchPhotosResponse
 import kotlinx.android.synthetic.main.activity_main.*
 import java.lang.Exception
-import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
     private lateinit var mActivityViewModel: MainActivityViewModel
@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var errorLiveData: LiveData<String>
     private var photos: ArrayList<Photo> = ArrayList()
 
-    private var locationUpdatedStarted: Boolean = false
+    private var locationUpdatesStarted = false
 
     private lateinit var rvAdapter: RecyclerView.Adapter<*>
 
@@ -117,18 +117,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("MissingPermission")
     private fun startLocationUpdates(request: LocationRequest) {
         val fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
 
         fusedLocationProviderClient.requestLocationUpdates(request, mLocationCallback, null)
-        locationUpdatedStarted = true
+        locationUpdatesStarted = true
     }
 
     private fun stopLocationUpdates() {
         val fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
 
         fusedLocationProviderClient.removeLocationUpdates(mLocationCallback)
-        locationUpdatedStarted = false
+        locationUpdatesStarted = false
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -164,7 +165,7 @@ class MainActivity : AppCompatActivity() {
         val startItem = menu.findItem(R.id.start)
         val stopItem = menu.findItem(R.id.stop)
 
-        if (locationUpdatedStarted) {
+        if (locationUpdatesStarted) {
             startItem.isVisible = false
             stopItem.isVisible = true
         } else {
@@ -192,8 +193,28 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
+        // Always call the superclass so it can restore the view hierarchy
+        super.onRestoreInstanceState(savedInstanceState)
+
+        // Restore state members from saved instance
+        savedInstanceState?.run {
+            locationUpdatesStarted = getBoolean(LOCATION_UPDATES_STARTED_KEY)
+        }
+
+    }
+
+    override fun onSaveInstanceState(outState: Bundle?) {
+        outState?.run {
+            putBoolean(LOCATION_UPDATES_STARTED_KEY, locationUpdatesStarted)
+        }
+        // Always call the superclass so it can save the view hierarchy state
+        super.onSaveInstanceState(outState)
+    }
+
     companion object {
         const val TAG = "MainActivity"
+        const val LOCATION_UPDATES_STARTED_KEY = "location_updates_started_id"
         const val LOCATION_SETTINGS_REQUEST_CODE = 23
         const val LOCATION_PERMISSIONS_REQUEST_CODE = 24
         const val LOCATION_UPDATES_DISPLACEMENT_IN_METERS = 100f
