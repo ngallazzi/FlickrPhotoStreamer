@@ -23,7 +23,8 @@ import retrofit2.http.Query
 interface FlickrApi {
     @GET(
         "rest?api_key=" + BuildConfig.API_KEY + "&method=flickr.photos.search" +
-                "&format=json&nojsoncallback=1&page=1&per_page=1"
+                "&format=json&nojsoncallback=1&page=1&per_page=1&radius=0.10" +
+                ""
     )
     fun searchPhotos(
         @Query("lat") latitude: Double,
