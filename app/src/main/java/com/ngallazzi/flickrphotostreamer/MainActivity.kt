@@ -37,6 +37,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var stopItem: MenuItem
 
     private lateinit var rvAdapter: RecyclerView.Adapter<*>
+    private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,6 +64,8 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
 
         rvAdapter = PhotosAdapter(photos, this)
 
@@ -93,7 +96,6 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("MissingPermission")
     @AfterPermissionGranted(LOCATION_PERMISSIONS_REQUEST_CODE)
     private fun startLocationUpdates() {
-        val fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
         val perms = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
         if (EasyPermissions.hasPermissions(this, *perms)) {
             // Already have permission, do the thing
@@ -110,7 +112,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun stopLocationUpdates() {
-        val fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
         fusedLocationProviderClient.removeLocationUpdates(mLocationCallback)
         locationUpdatesStarted = false
         Log.v(TAG, "Location update stopped")
