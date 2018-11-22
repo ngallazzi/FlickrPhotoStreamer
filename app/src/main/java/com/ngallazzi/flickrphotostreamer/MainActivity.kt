@@ -2,36 +2,26 @@ package com.ngallazzi.flickrphotostreamer
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.os.Bundle
-import android.provider.Settings
 import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
-import com.ngallazzi.flickrphotostreamer.LocationSettingsHelper.Companion.LocationSettingsStatusListener
-import com.ngallazzi.flickrphotostreamer.LocationSettingsHelper.Companion.requestLocationSettingsStatus
 import com.ngallazzi.flickrphotostreamer.activities.MainActivityViewModel
 import com.ngallazzi.flickrphotostreamer.repository.models.Photo
 import com.ngallazzi.flickrphotostreamer.repository.models.SearchPhotosResponse
 import kotlinx.android.synthetic.main.activity_main.*
-import java.lang.Exception
-import java.util.concurrent.TimeUnit
+import pub.devrel.easypermissions.AfterPermissionGranted
+import pub.devrel.easypermissions.EasyPermissions
+
 
 class MainActivity : AppCompatActivity() {
     private lateinit var mActivityViewModel: MainActivityViewModel
@@ -45,8 +35,6 @@ class MainActivity : AppCompatActivity() {
     private var locationUpdatesStarted = false
     private lateinit var startItem: MenuItem
     private lateinit var stopItem: MenuItem
-
-    private var locationUpdatedStarted: Boolean = false
 
     private lateinit var rvAdapter: RecyclerView.Adapter<*>
 
@@ -76,12 +64,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-
         rvAdapter = PhotosAdapter(photos, this)
 
         initPhotosRecyclerView()
 
         photosLiveData = mActivityViewModel.getSearchPhotos()
+
         photosLiveData.observe(this@MainActivity, Observer {
             for (item in it.response.photos) {
                 photos.add(0, item)
@@ -93,7 +81,6 @@ class MainActivity : AppCompatActivity() {
         errorLiveData.observe(this@MainActivity, Observer {
             Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
         })
-
     }
 
     private fun initPhotosRecyclerView() {
@@ -103,15 +90,22 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun startLocationUpdates(request: LocationRequest) {
+    @SuppressLint("MissingPermission")
+    @AfterPermissionGranted(LOCATION_PERMISSIONS_REQUEST_CODE)
+    private fun startLocationUpdates() {
         val fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
-        if (checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PERMISSION_GRANTED) {
-            // Permission granted
-            fusedLocationProviderClient.requestLocationUpdates(request, mLocationCallback, null)
-            locationUpdatedStarted = true
-            Log.v(TAG, "Location updated started")
+        val perms = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+        if (EasyPermissions.hasPermissions(this, *perms)) {
+            // Already have permission, do the thing
+            fusedLocationProviderClient.requestLocationUpdates(mLocationUpdatesRequest, mLocationCallback, null)
+            locationUpdatesStarted = true
+            Log.v(TAG, "Location update started")
         } else {
-            // todo show an error
+            // Do not have permissions, request them now
+            EasyPermissions.requestPermissions(
+                this@MainActivity, getString(R.string.location_permissions_required),
+                LOCATION_PERMISSIONS_REQUEST_CODE, *perms
+            )
         }
     }
 
@@ -119,31 +113,7 @@ class MainActivity : AppCompatActivity() {
         val fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
         fusedLocationProviderClient.removeLocationUpdates(mLocationCallback)
         locationUpdatesStarted = false
-        Log.v(TAG, "Location updated stopped")
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == LOCATION_SETTINGS_REQUEST_CODE) {
-            when (resultCode) {
-                Activity.RESULT_OK -> {
-                    if (LocationSettingsHelper.locationPermissionsAllowed(this@MainActivity)) {
-                        startItem.isEnabled = true
-                    } else {
-                        // No explanation needed, we can request the permission.
-                        ActivityCompat.requestPermissions(
-                            this@MainActivity,
-                            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                            LOCATION_PERMISSIONS_REQUEST_CODE
-                        )
-                    }
-                }
-                Activity.RESULT_CANCELED -> {
-                    Toast.makeText(this, getString(R.string.location_settings_unsatisfied_mesage), Toast.LENGTH_SHORT)
-                        .show()
-                }
-            }
-        }
+        Log.v(TAG, "Location update stopped")
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -153,57 +123,31 @@ class MainActivity : AppCompatActivity() {
         startItem = menu.findItem(R.id.start)
         stopItem = menu.findItem(R.id.stop)
 
-        requestLocationSettingsStatus(this, mLocationSettingsRequest, object :
-            LocationSettingsStatusListener {
-            override fun onResolutionRequired(exception: ResolvableApiException) {
-                try {
-                    exception.startResolutionForResult(this@MainActivity, LOCATION_SETTINGS_REQUEST_CODE)
-                } catch (e: Exception) {
-                    Toast.makeText(this@MainActivity, e.message, Toast.LENGTH_SHORT).show()
-                }
-            }
+        if (locationUpdatesStarted) {
+            startItem.isVisible = false
+            stopItem.isVisible = true
+        } else {
+            stopItem.isVisible = false
+            startItem.isVisible = true
+        }
 
-            override fun onSettingsChangeUnavailable() {
-                startActivityForResult(Intent(Settings.ACTION_SETTINGS), LOCATION_SETTINGS_REQUEST_CODE)
-            }
-
-            override fun onSettingsSatisfied() {
-                if (LocationSettingsHelper.locationPermissionsAllowed(this@MainActivity)) {
-                    startItem.isEnabled = true
-                } else {
-                    // No explanation needed, we can request the permission.
-                    ActivityCompat.requestPermissions(
-                        this@MainActivity,
-                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                        LOCATION_PERMISSIONS_REQUEST_CODE
-                    )
-                }
-            }
-        })
         return true
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == LOCATION_PERMISSIONS_REQUEST_CODE) {
-            when (grantResults[0]) {
-                PackageManager.PERMISSION_GRANTED -> {
-                    startItem.isEnabled = true
-                }
-                else -> {
-                    Toast.makeText(this, getString(R.string.location_settings_unsatisfied_mesage), Toast.LENGTH_SHORT)
-                        .show()
-                }
-            }
-        }
 
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        // Forward results to EasyPermissions
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this)
     }
+
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         // Handle item selection
         return when (item.itemId) {
             R.id.start -> {
-                startLocationUpdates(mLocationUpdatesRequest)
+                startLocationUpdates()
                 startItem.isVisible = false
                 stopItem.isVisible = true
                 true
@@ -245,7 +189,6 @@ class MainActivity : AppCompatActivity() {
     companion object {
         const val TAG = "MainActivity"
         const val LOCATION_UPDATES_STARTED_KEY = "location_updates_started_id"
-        const val LOCATION_SETTINGS_REQUEST_CODE = 23
         const val LOCATION_PERMISSIONS_REQUEST_CODE = 24
         const val LOCATION_UPDATES_INTERVAL_MILLIS = 0L
         const val LOCATION_UPDATES_FASTEST_INTERVAL_MILLIS = 0L
