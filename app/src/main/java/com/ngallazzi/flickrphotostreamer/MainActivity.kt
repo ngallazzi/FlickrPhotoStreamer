@@ -38,7 +38,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var stopItem: MenuItem
 
     private lateinit var rvAdapter: RecyclerView.Adapter<*>
-    private lateinit var locationUpdatesServiceIntent: Intent
 
     private lateinit var brPositionChanged: BroadcastReceiver
 
@@ -72,11 +71,10 @@ class MainActivity : AppCompatActivity() {
 
         locationUpdatesService = LocationUpdatesService()
 
-
+        registerPositionBroadcastReceiver()
     }
 
-    override fun onResume() {
-        super.onResume()
+    private fun registerPositionBroadcastReceiver() {
         val filter = IntentFilter().apply {
             addAction(LocationUpdatesService.POSITION_CHANGED_ACTION_ID)
         }
@@ -96,10 +94,6 @@ class MainActivity : AppCompatActivity() {
         registerReceiver(brPositionChanged, filter)
     }
 
-    override fun onPause() {
-        super.onPause()
-        unregisterReceiver(brPositionChanged)
-    }
 
     private fun initPhotosRecyclerView() {
         rvPhotoStream.apply {
@@ -126,6 +120,7 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this@MainActivity, LocationUpdatesService::class.java)
             intent.setAction(LocationUpdatesService.ACTION_START_FOREGROUND_SERVICE)
             startService(intent)
+            Toast.makeText(this, getString(R.string.location_updates_started), Toast.LENGTH_SHORT).show()
             locationUpdatesStarted = true
         } else {
             // Do not have permissions, request them now
@@ -186,6 +181,7 @@ class MainActivity : AppCompatActivity() {
             }
             R.id.clear -> {
                 photos.clear()
+                mActivityViewModel.clear()
                 rvAdapter.notifyDataSetChanged()
                 true
             }
@@ -202,6 +198,11 @@ class MainActivity : AppCompatActivity() {
             locationUpdatesStarted = getBoolean(LOCATION_UPDATES_STARTED_KEY)
         }
 
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(brPositionChanged)
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {

@@ -1,5 +1,6 @@
 package com.ngallazzi.flickrphotostreamer.activities
 
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.ngallazzi.flickrphotostreamer.repository.FlickrApi
@@ -33,7 +34,7 @@ class PhotosViewModel : ViewModel() {
                     photos.add(response.body()!!.content.photos[0])
                     photosLiveData.postValue(photos)
                 } else {
-                    showError.value = response.errorBody()!!.string()
+                    Log.d(TAG, "No photos found at this position. Lat: $lat, Long:$long")
                 }
             }
 
@@ -43,11 +44,19 @@ class PhotosViewModel : ViewModel() {
         })
     }
 
+    public fun clear() {
+        photos.clear()
+    }
+
     public fun getPhotos(): MutableLiveData<ArrayList<Photo>> {
         return photosLiveData
     }
 
     public fun getError(): MutableLiveData<String> {
         return showError
+    }
+
+    companion object {
+        val TAG = PhotosViewModel::class.java.simpleName
     }
 }

@@ -1,23 +1,21 @@
 package com.ngallazzi.flickrphotostreamer.services
 
 import android.annotation.SuppressLint
+import android.annotation.TargetApi
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationCompat.PRIORITY_LOW
 import com.google.android.gms.location.*
 import com.ngallazzi.flickrphotostreamer.MainActivity
 import java.util.concurrent.TimeUnit
-import android.annotation.TargetApi
-import android.content.Context
-import android.graphics.Color
-import android.os.Build
-import androidx.core.app.NotificationCompat.PRIORITY_LOW
 
 
 class LocationUpdatesService : Service() {
@@ -67,11 +65,9 @@ class LocationUpdatesService : Service() {
             when (action) {
                 ACTION_START_FOREGROUND_SERVICE -> {
                     startForegroundService()
-                    Toast.makeText(applicationContext, "Foreground service is started.", Toast.LENGTH_LONG).show()
                 }
                 ACTION_STOP_FOREGROUND_SERVICE -> {
                     stopForegroundService()
-                    Toast.makeText(applicationContext, "Foreground service is stopped.", Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -80,22 +76,22 @@ class LocationUpdatesService : Service() {
 
     @SuppressLint("MissingPermission")
     private fun startForegroundService() {
-        Log.d(TAG, "Start foreground service.")
         startForeground(NOTIFICATION_ID, getNotification())
+        fusedLocationProviderClient.lastLocation.addOnSuccessListener {
+            sendPositionChangedBroadcast(it.latitude, it.longitude)
+        }
+
         fusedLocationProviderClient.requestLocationUpdates(mLocationUpdatesRequest, mLocationCallback, null)
         Log.v(MainActivity.TAG, "Location update started")
-
     }
 
     fun getNotification(): Notification {
-        val channel: String
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-            channel = createChannel()
-        else {
-            channel = ""
-        }
-        val mBuilder = NotificationCompat.Builder(this, channel).setSmallIcon(android.R.drawable.ic_menu_mylocation)
-            .setContentTitle("snap map fake location")
+            createChannel()
+
+        val mBuilder = NotificationCompat.Builder(this, CHANNEL_NAME)
+            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+            .setContentTitle(NOTIFICATION_MESSAGE)
 
 
         return mBuilder
@@ -106,22 +102,14 @@ class LocationUpdatesService : Service() {
 
     @TargetApi(26)
     @Synchronized
-    private fun createChannel(): String {
+    private fun createChannel() {
         val mNotificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        val name = "snap map fake location "
         val importance = NotificationManager.IMPORTANCE_LOW
 
-        val mChannel = NotificationChannel("snap map channel", name, importance)
+        val mChannel = NotificationChannel(CHANNEL_NAME, NOTIFICATION_MESSAGE, importance)
 
-        mChannel.enableLights(true)
-        mChannel.lightColor = Color.BLUE
-        if (mNotificationManager != null) {
-            mNotificationManager.createNotificationChannel(mChannel)
-        } else {
-            stopSelf()
-        }
-        return "snap map channel"
+        mNotificationManager.createNotificationChannel(mChannel)
     }
 
     private fun stopForegroundService() {
@@ -140,7 +128,7 @@ class LocationUpdatesService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         fusedLocationProviderClient.removeLocationUpdates(mLocationCallback)
-        Log.v(TAG, "Location update stopped")
+        Log.v(TAG, "Location updates stopped")
     }
 
     private fun sendPositionChangedBroadcast(latitude: Double, longitude: Double) {
@@ -157,6 +145,8 @@ class LocationUpdatesService : Service() {
         const val NOTIFICATION_ID = 1
         const val ACTION_START_FOREGROUND_SERVICE = "start_service"
         const val ACTION_STOP_FOREGROUND_SERVICE = "stop_service"
+        const val CHANNEL_NAME = "FLICKR_PHOTO_STREAMER"
+        const val NOTIFICATION_MESSAGE = "listening for position updates"
 
         const val LOCATION_UPDATES_INTERVAL_MILLIS = 0L
         const val LOCATION_UPDATES_FASTEST_INTERVAL_MILLIS = 0L
