@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import com.ngallazzi.flickrphotostreamer.repository.models.Photo
+import com.squareup.picasso.NetworkPolicy
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.item_picture.view.*
 
@@ -26,7 +27,10 @@ class PhotosAdapter(private val photos: ArrayList<Photo>, private val context: C
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
-        Picasso.get().load(photos[position].getUrl()).into(holder.ivLocation)
+        Picasso.get()
+            .load(photos[position].getUrl())
+            //.networkPolicy(NetworkPolicy.OFFLINE)
+            .into(holder.ivLocation)
     }
 
     // Return the size of your dataset (invoked by the layout manager)

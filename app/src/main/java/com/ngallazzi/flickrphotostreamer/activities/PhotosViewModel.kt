@@ -3,6 +3,7 @@ package com.ngallazzi.flickrphotostreamer.activities
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.ngallazzi.flickrphotostreamer.repository.FlickrApi
+import com.ngallazzi.flickrphotostreamer.repository.models.Photo
 import com.ngallazzi.flickrphotostreamer.repository.models.SearchPhotosResponse
 import retrofit2.Call
 import retrofit2.Callback
@@ -13,10 +14,14 @@ import retrofit2.Response
  * Created by Nicola on 2017-03-02.
  */
 
-class MainActivityViewModel : ViewModel() {
-
-    private var searchPhotosResponse: MutableLiveData<SearchPhotosResponse> = MutableLiveData()
+class PhotosViewModel : ViewModel() {
+    private var photos: ArrayList<Photo> = arrayListOf()
+    private var photosLiveData: MutableLiveData<ArrayList<Photo>> = MutableLiveData()
     private var showError: MutableLiveData<String> = MutableLiveData()
+
+    init {
+        photosLiveData.value = photos
+    }
 
 
     public fun loadPhotos(lat: Double, long: Double) {
@@ -24,8 +29,9 @@ class MainActivityViewModel : ViewModel() {
         val call = service.searchPhotos(lat, long)
         call.enqueue(object : Callback<SearchPhotosResponse> {
             override fun onResponse(call: Call<SearchPhotosResponse>, response: Response<SearchPhotosResponse>) {
-                if (response.isSuccessful) {
-                    searchPhotosResponse.value = SearchPhotosResponse(response.body()!!.response)
+                if (response.isSuccessful && response.body()!!.content.photos.size > 0) {
+                    photos.add(response.body()!!.content.photos[0])
+                    photosLiveData.postValue(photos)
                 } else {
                     showError.value = response.errorBody()!!.string()
                 }
@@ -37,8 +43,8 @@ class MainActivityViewModel : ViewModel() {
         })
     }
 
-    public fun getSearchPhotos(): MutableLiveData<SearchPhotosResponse> {
-        return searchPhotosResponse
+    public fun getPhotos(): MutableLiveData<ArrayList<Photo>> {
+        return photosLiveData
     }
 
     public fun getError(): MutableLiveData<String> {

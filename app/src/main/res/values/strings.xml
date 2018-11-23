@@ -5,6 +5,7 @@
     <string name="api_error">An error occurred: %1$s</string>
     <string name="location_settings_unsatisfied_mesage">You need update your location settings to use this app</string>
     <string name="please_change_location_settings">Please change location settings to use this app</string>
+    <string name="notification_message">Listening for position changes</string>
     <string name="location_permissions_required">Location permissions are required</string>
     <string name="location_settings_ok_message">Location settings ok</string>
     <string name="clear">clear items</string>
