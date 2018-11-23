@@ -75,7 +75,11 @@ class MainActivity : AppCompatActivity() {
 
         photosLiveData.observe(this@MainActivity, Observer {
             for (item in it.response.photos) {
-                photos.add(0, item)
+                if (isNew(item)) {
+                    photos.add(0, item)
+                } else {
+                    Log.d(TAG, "found same photo, dropping it. id: ${item.id}")
+                }
             }
             rvAdapter.notifyDataSetChanged()
         })
@@ -91,6 +95,15 @@ class MainActivity : AppCompatActivity() {
             layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = rvAdapter
         }
+    }
+
+    private fun isNew(photo: Photo): Boolean {
+        for (item in photos) {
+            if (item.id == photo.id) {
+                return false
+            }
+        }
+        return true
     }
 
     @SuppressLint("MissingPermission")
