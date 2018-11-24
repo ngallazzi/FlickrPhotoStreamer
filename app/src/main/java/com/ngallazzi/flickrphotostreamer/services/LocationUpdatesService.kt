@@ -2,10 +2,7 @@ package com.ngallazzi.flickrphotostreamer.services
 
 import android.annotation.SuppressLint
 import android.annotation.TargetApi
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.Service
+import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -85,19 +82,31 @@ class LocationUpdatesService : Service() {
         Log.v(MainActivity.TAG, "Location update started")
     }
 
-    fun getNotification(): Notification {
+    private fun getNotification(): Notification {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
             createChannel()
 
-        val mBuilder = NotificationCompat.Builder(this, CHANNEL_NAME)
-            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
-            .setContentTitle(NOTIFICATION_MESSAGE)
-
+        val mBuilder = NotificationCompat.Builder(this, CHANNEL_NAME).apply {
+            setSmallIcon(android.R.drawable.ic_menu_mylocation)
+            setContentTitle(NOTIFICATION_MESSAGE)
+            setContentIntent(getMainActivityPendingIntent())
+        }
 
         return mBuilder
             .setPriority(PRIORITY_LOW)
             .setCategory(Notification.CATEGORY_SERVICE)
             .build()
+    }
+
+    private fun getMainActivityPendingIntent(): PendingIntent {
+        // Create an Intent for the activity you want to start
+        val intent = Intent(this, MainActivity::class.java)
+        // Create the TaskStackBuilder
+        val pendingIntent = PendingIntent.getActivity(
+            this, 0,
+            intent, PendingIntent.FLAG_UPDATE_CURRENT
+        );
+        return pendingIntent!!
     }
 
     @TargetApi(26)
@@ -151,7 +160,7 @@ class LocationUpdatesService : Service() {
         const val LOCATION_UPDATES_INTERVAL_MILLIS = 0L
         const val LOCATION_UPDATES_FASTEST_INTERVAL_MILLIS = 0L
         const val LOCATION_UPDATES_DISPLACEMENT_IN_METERS = 100f
-        val EXPIRATION_DURATION_MINUTES = TimeUnit.MINUTES.toMillis(120)
+        val EXPIRATION_DURATION_MINUTES = TimeUnit.MINUTES.toMillis(180) // Three hours
 
         const val POSITION_CHANGED_ACTION_ID = "position_changed_action"
         const val POSITION_LATITUDE = "position_latitude"

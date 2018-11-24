@@ -46,7 +46,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         mActivityViewModel = ViewModelProviders.of(this).get(PhotosViewModel::class.java)
-
         rvAdapter = PhotosAdapter(photos, this)
 
         initPhotosRecyclerView()
@@ -54,19 +53,16 @@ class MainActivity : AppCompatActivity() {
         photosLiveData = mActivityViewModel.getPhotos()
 
         photosLiveData.observe(this@MainActivity, Observer {
-            for (item in it) {
-                if (isNew(item)) {
-                    photos.add(0, item)
-                } else {
-                    Log.d(TAG, "found same photo, dropping it. id: ${item.id}")
-                }
+            if (it.size > 0) {
+                photos.add(0, it.last())
+                rvAdapter.notifyDataSetChanged()
             }
-            rvAdapter.notifyDataSetChanged()
         })
 
         errorLiveData = mActivityViewModel.getError()
         errorLiveData.observe(this@MainActivity, Observer {
-            Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
+            val error = Utils.getErrorStringByIdentifier(it, this)
+            Toast.makeText(this, error, Toast.LENGTH_SHORT).show()
         })
 
         locationUpdatesService = LocationUpdatesService()
@@ -102,14 +98,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun isNew(photo: Photo): Boolean {
-        for (item in photos) {
-            if (item.id == photo.id) {
-                return false
-            }
-        }
-        return true
-    }
 
     @SuppressLint("MissingPermission")
     @AfterPermissionGranted(LOCATION_PERMISSIONS_REQUEST_CODE)
@@ -155,6 +143,9 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    override fun onNewIntent(intent: Intent?) {
+        // override to avoid activity recreation when clicking on service notification
+    }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
@@ -218,4 +209,5 @@ class MainActivity : AppCompatActivity() {
         const val LOCATION_UPDATES_STARTED_KEY = "location_updates_started_id"
         const val LOCATION_PERMISSIONS_REQUEST_CODE = 24
     }
+
 }

@@ -25,16 +25,25 @@ class PhotosViewModel : ViewModel() {
     }
 
 
-    public fun loadPhotos(lat: Double, long: Double) {
+    fun loadPhotos(lat: Double, long: Double) {
+        Log.d(TAG, "searching photos at $lat,$long")
         val service = FlickrApi.flickrApiServe
         val call = service.searchPhotos(lat, long)
         call.enqueue(object : Callback<SearchPhotosResponse> {
             override fun onResponse(call: Call<SearchPhotosResponse>, response: Response<SearchPhotosResponse>) {
                 if (response.isSuccessful && response.body()!!.content.photos.size > 0) {
-                    photos.add(response.body()!!.content.photos[0])
-                    photosLiveData.postValue(photos)
+                    val downloadedPhoto = response.body()!!.content.photos[0]
+                    if (isNew(downloadedPhoto)) {
+                        photos.add(downloadedPhoto)
+                        photosLiveData.postValue(photos)
+                    } else {
+                        showError.value = "duplicated_photo_error_key"
+                        Log.d(TAG, "Photo already in the list, dropping...")
+                    }
+
                 } else {
-                    Log.d(TAG, "No photos found at this position. Lat: $lat, Long:$long")
+                    showError.value = "no_photos_found_error_key"
+                    Log.d(TAG, "No photos found at this location")
                 }
             }
 
@@ -44,15 +53,24 @@ class PhotosViewModel : ViewModel() {
         })
     }
 
-    public fun clear() {
+    private fun isNew(photo: Photo): Boolean {
+        for (item in photos) {
+            if (item.id == photo.id) {
+                return false
+            }
+        }
+        return true
+    }
+
+    fun clear() {
         photos.clear()
     }
 
-    public fun getPhotos(): MutableLiveData<ArrayList<Photo>> {
+    fun getPhotos(): MutableLiveData<ArrayList<Photo>> {
         return photosLiveData
     }
 
-    public fun getError(): MutableLiveData<String> {
+    fun getError(): MutableLiveData<String> {
         return showError
     }
 
