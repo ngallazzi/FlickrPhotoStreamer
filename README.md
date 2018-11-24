@@ -1,4 +1,4 @@
-# WatchersExplorer
+# FlickrPhotoStreamer
 
 A simple app to get photos from flickr api according to your GPS position
 <div>
