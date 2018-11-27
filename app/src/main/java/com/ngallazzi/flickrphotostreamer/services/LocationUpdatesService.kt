@@ -11,7 +11,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.PRIORITY_LOW
 import com.google.android.gms.location.*
-import com.ngallazzi.flickrphotostreamer.MainActivity
+import com.ngallazzi.flickrphotostreamer.activities.MainActivity
 import java.util.concurrent.TimeUnit
 
 
@@ -74,10 +74,6 @@ class LocationUpdatesService : Service() {
     @SuppressLint("MissingPermission")
     private fun startForegroundService() {
         startForeground(NOTIFICATION_ID, getNotification())
-        fusedLocationProviderClient.lastLocation.addOnSuccessListener {
-            sendPositionChangedBroadcast(it.latitude, it.longitude)
-        }
-
         fusedLocationProviderClient.requestLocationUpdates(mLocationUpdatesRequest, mLocationCallback, null)
         Log.v(MainActivity.TAG, "Location update started")
     }

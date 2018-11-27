@@ -18,6 +18,9 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.ngallazzi.flickrphotostreamer.PhotosAdapter
+import com.ngallazzi.flickrphotostreamer.R
+import com.ngallazzi.flickrphotostreamer.Utils
 import com.ngallazzi.flickrphotostreamer.activities.PhotosViewModel
 import com.ngallazzi.flickrphotostreamer.repository.models.Photo
 import com.ngallazzi.flickrphotostreamer.services.LocationUpdatesService
