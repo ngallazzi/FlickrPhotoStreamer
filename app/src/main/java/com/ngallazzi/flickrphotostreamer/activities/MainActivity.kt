@@ -1,4 +1,4 @@
-package com.ngallazzi.flickrphotostreamer
+package com.ngallazzi.flickrphotostreamer.activities
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -15,7 +15,8 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.location.*
-import com.ngallazzi.flickrphotostreamer.activities.MainActivityViewModel
+import com.ngallazzi.flickrphotostreamer.PhotosAdapter
+import com.ngallazzi.flickrphotostreamer.R
 import com.ngallazzi.flickrphotostreamer.repository.models.Photo
 import com.ngallazzi.flickrphotostreamer.repository.models.SearchPhotosResponse
 import kotlinx.android.synthetic.main.activity_main.*
