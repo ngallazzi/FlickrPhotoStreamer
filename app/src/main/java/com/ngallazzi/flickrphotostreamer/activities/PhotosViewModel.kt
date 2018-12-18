@@ -36,6 +36,7 @@ class PhotosViewModel : ViewModel() {
                     if (isNew(downloadedPhoto)) {
                         photos.add(downloadedPhoto)
                         photosLiveData.postValue(photos)
+                        Log.v(TAG, "Photos count: " + photos.size)
                     } else {
                         showError.value = "duplicated_photo_error_key"
                         Log.d(TAG, "Photo already in the list, dropping...")
@@ -75,6 +76,6 @@ class PhotosViewModel : ViewModel() {
     }
 
     companion object {
-        val TAG = PhotosViewModel::class.java.simpleName
+        val TAG = MainActivity.TAG + " - " + PhotosViewModel::class.java.simpleName
     }
 }

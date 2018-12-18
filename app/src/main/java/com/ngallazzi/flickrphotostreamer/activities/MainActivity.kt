@@ -57,8 +57,17 @@ class MainActivity : AppCompatActivity() {
 
         photosLiveData.observe(this@MainActivity, Observer {
             if (it.size > 0) {
-                photos.add(0, it.last())
+                if (photos.size == it.size - 1) {
+                    photos.add(0, it.last())
+                } else {
+                    for (i in photos.size..it.size-1) {
+                        photos.add(0, it[i])
+                    }
+                }
                 rvAdapter.notifyDataSetChanged()
+                Log.i(TAG, "Adding photo to list: " + it.last().id)
+                Log.i(TAG, "Photos list size: " + photos.size)
+                Log.i(TAG, "Live data list size: " + it.size)
             }
         })
 
@@ -116,8 +125,8 @@ class MainActivity : AppCompatActivity() {
         } else {
             // Do not have permissions, request them now
             EasyPermissions.requestPermissions(
-                this@MainActivity, getString(R.string.location_permissions_required),
-                LOCATION_PERMISSIONS_REQUEST_CODE, *perms
+                    this@MainActivity, getString(R.string.location_permissions_required),
+                    LOCATION_PERMISSIONS_REQUEST_CODE, *perms
             )
         }
     }
